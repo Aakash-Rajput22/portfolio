@@ -35,11 +35,58 @@ function SectionHeading({ eyebrow, title }) {
 function App() {
   const [open, setOpen] = useState(false);
   const [sent, setSent] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const observer = new IntersectionObserver((items) => items.forEach((item) => item.isIntersecting && item.target.classList.add("is-visible")), { threshold: 0.12 });
+    const observer = new IntersectionObserver((items) => items.forEach((item) => {
+      if (item.isIntersecting) {
+        item.target.classList.add("is-visible");
+        observer.unobserve(item.target);
+      }
+    }), { threshold: 0.12 });
     document.querySelectorAll(".reveal").forEach((element) => observer.observe(element));
-    return () => observer.disconnect();
+    const updateNavbar = () => setScrolled(window.scrollY > 18);
+    updateNavbar();
+    window.addEventListener("scroll", updateNavbar, { passive: true });
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", updateNavbar);
+    };
+  }, []);
+
+  useEffect(() => {
+    const supportsPointerEffects = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const updatePointer = (event) => {
+      if (!supportsPointerEffects.matches) return;
+      document.documentElement.style.setProperty("--pointer-x", `${event.clientX}px`);
+      document.documentElement.style.setProperty("--pointer-y", `${event.clientY}px`);
+    };
+    window.addEventListener("pointermove", updatePointer, { passive: true });
+    const projectCards = [...document.querySelectorAll(".project")];
+    const tiltProject = (event) => {
+      if (!supportsPointerEffects.matches) return;
+      const card = event.currentTarget;
+      const bounds = card.getBoundingClientRect();
+      const rotateY = ((event.clientX - bounds.left) / bounds.width - 0.5) * 5;
+      const rotateX = ((event.clientY - bounds.top) / bounds.height - 0.5) * -4;
+      card.style.setProperty("--tilt-x", `${rotateX.toFixed(2)}deg`);
+      card.style.setProperty("--tilt-y", `${rotateY.toFixed(2)}deg`);
+    };
+    const resetProject = (event) => {
+      event.currentTarget.style.removeProperty("--tilt-x");
+      event.currentTarget.style.removeProperty("--tilt-y");
+    };
+    projectCards.forEach((card) => {
+      card.addEventListener("pointermove", tiltProject);
+      card.addEventListener("pointerleave", resetProject);
+    });
+    return () => {
+      window.removeEventListener("pointermove", updatePointer);
+      projectCards.forEach((card) => {
+        card.removeEventListener("pointermove", tiltProject);
+        card.removeEventListener("pointerleave", resetProject);
+      });
+    };
   }, []);
 
   const closeMenu = () => setOpen(false);
@@ -55,8 +102,8 @@ function App() {
   };
 
   return <>
-    <header className="navbar">
-      <a className="logo" href="#home" onClick={closeMenu}>AKASH<span>.</span></a>
+    <header className={scrolled ? "navbar is-scrolled" : "navbar"}>
+      <a className="logo" href="#home" onClick={closeMenu}>AKASH</a>
       <button className="menu-button" aria-label="Toggle navigation" aria-expanded={open} onClick={() => setOpen(!open)}><Icon name={open ? "close" : "menu"} /></button>
       <nav className={open ? "nav-menu open" : "nav-menu"} aria-label="Main navigation">
         {navigation.map((item) => <a key={item} href={`#${item.toLowerCase()}`} onClick={closeMenu}>{item}</a>)}
@@ -66,11 +113,11 @@ function App() {
 
     <main>
       <section id="home" className="hero">
-        <div className="hero-orb orb-one" /><div className="hero-orb orb-two" />
-        <div className="hero-copy reveal is-visible">
-          <p className="eyebrow"><span /> Hello, I&apos;m</p>
+        <div className="hero-orb orb-one" /><div className="hero-orb orb-two" /><div className="hero-signal" aria-hidden="true"><i /><i /><i /></div>
+        <div className="hero-copy hero-entrance">
+          <p className="eyebrow">Hello, I&apos;m</p>
           <h1>Akash <em>Rajput</em></h1>
-          <p className="role">Software Developer <span>⌁</span> Building for the web</p>
+          <p className="role">Software Developer</p>
           <p className="hero-description">I build modern, responsive web applications with React, JavaScript, Firebase and thoughtful user-focused interfaces.</p>
           <div className="hero-actions">
             <a className="button primary" href="#projects">View My Work <Icon name="arrow" size={18} /></a>
@@ -83,26 +130,26 @@ function App() {
             {contactEmail ? <a href={`mailto:${contactEmail}`} aria-label="Email Akash"><Icon name="mail" /></a> : <a href="#contact" aria-label="Contact Akash"><Icon name="mail" /></a>}
           </div>
         </div>
-        <div className="hero-panel reveal is-visible" aria-hidden="true">
+        <div className="hero-panel hero-panel-entrance" aria-hidden="true">
           <div className="code-window"><div className="window-top"><i /><i /><i /><span>akash.dev</span></div><pre><code><b>const</b> developer = {'{'}{`\n`}  name: <strong>&quot;Akash Rajput&quot;</strong>,{`\n`}  stack: [<strong>&quot;React&quot;</strong>, <strong>&quot;Firebase&quot;</strong>],{`\n`}  focus: <strong>&quot;thoughtful web experiences&quot;</strong>{`\n`}{'}'};</code></pre><div className="window-status"><span /> available to build</div></div>
         </div>
       </section>
 
-      <section id="about" className="section about"><SectionHeading eyebrow="01 / ABOUT" title="Crafting practical digital experiences." /><div className="about-grid"><div className="about-copy reveal"><p>I&apos;m a software developer building responsive web applications with React, JavaScript and Firebase. I enjoy turning ideas into clear, practical interfaces that solve real user needs.</p><p>I&apos;m focused on thoughtful problem solving, strong web fundamentals and continuous learning through hands-on project work.</p></div><aside className="focus-card reveal"><span className="card-label">CURRENT FOCUS</span><div><b>01</b><p>Real-world projects</p></div><div><b>02</b><p>Frontend development</p></div><div><b>03</b><p>Continuous learning</p></div></aside></div></section>
+      <section id="about" className="section about"><SectionHeading eyebrow="01 ABOUT" title="Crafting practical digital experiences." /><div className="about-grid"><div className="about-copy reveal"><p>I&apos;m a software developer building responsive web applications with React, JavaScript and Firebase. I enjoy turning ideas into clear, practical interfaces that solve real user needs.</p><p>I&apos;m focused on thoughtful problem solving, strong web fundamentals and continuous learning through hands-on project work.</p></div><aside className="focus-card reveal"><span className="card-label">CURRENT FOCUS</span><div><b>01</b><p>Real-world projects</p></div><div><b>02</b><p>Frontend development</p></div><div><b>03</b><p>Continuous learning</p></div></aside></div></section>
 
-      <section id="skills" className="section"><SectionHeading eyebrow="02 / TOOLKIT" title="The tools I use to ship." /><div className="skill-groups">{skillGroups.map((group) => <div className="skill-group" key={group.title}><h3>{group.title}</h3><div className="skills-grid">{group.skills.map(([skill, symbol], index) => <article className="skill-card reveal" key={skill} style={{ transitionDelay: `${index * 40}ms` }}><span className="skill-symbol">{symbol}</span><h4>{skill}</h4><span className="skill-line" /></article>)}</div></div>)}</div></section>
+      <section id="skills" className="section"><SectionHeading eyebrow="02 TOOLKIT" title="The tools I use to ship." /><div className="skill-groups">{skillGroups.map((group) => <div className="skill-group" key={group.title}><h3>{group.title}</h3><div className="skills-grid">{group.skills.map(([skill, symbol], index) => <article className="skill-card reveal" key={skill} style={{ transitionDelay: `${index * 40}ms` }}><span className="skill-symbol">{symbol}</span><h4>{skill}</h4><span className="skill-line" /></article>)}</div></div>)}</div></section>
 
-      <section id="projects" className="section projects"><SectionHeading eyebrow="03 / SELECTED WORK" title="Projects with purpose." /><div className="project-list">
+      <section id="projects" className="section projects"><SectionHeading eyebrow="03 SELECTED WORK" title="Projects with purpose." /><div className="project-list">
         <article className="project featured reveal"><div className="project-visual knowora-visual"><div className="match-chip">FLAGSHIP BUILD <i /></div><div className="score-card"><span>FIND YOUR GAME</span><b>KNOWORA</b><small>sports · community · play</small></div><div className="visual-grid" /></div><div className="project-content"><p className="project-kicker">FEATURED PROJECT <span>2026</span></p><h3>Knowora</h3><p>A modern, responsive sports matchmaking platform where users can discover matches, connect with players, join games and manage their profiles and wallet.</p><ul className="feature-list"><li>Authentication, matchmaking, game joining and profiles</li><li>Wallet/credits and Razorpay test integration</li><li>Firebase/Firestore with leaderboards, friends and badges</li></ul><div className="tags">{["React", "JavaScript", "Firebase", "Firestore", "Razorpay", "Responsive UI"].map((tag) => <span key={tag}>{tag}</span>)}</div><div className="project-actions"><a className="button primary small" href="https://knowora-app.vercel.app" target="_blank" rel="noreferrer">Live Demo <Icon name="external" size={16} /></a><a className="project-link" href={githubUrl} target="_blank" rel="noreferrer"><Icon name="github" size={18} /> View GitHub</a></div></div></article>
         <article className="project w3-project reveal"><div className="project-visual w3-visual"><span>W3</span><div className="villa-lines"><i /><i /><i /></div><small>VILLA</small></div><div className="project-content"><p className="project-kicker">PROJECT ARCHIVE</p><h3>W3 Villa</h3><p>Project details have not been included in this portfolio repository yet. Add its verified description and technology stack here when available.</p><div className="project-actions"><a className="button primary small" href="https://w3-assignment-three.vercel.app/" target="_blank" rel="noreferrer">Live Demo <Icon name="external" size={16} /></a><a className="project-link" href={githubUrl} target="_blank" rel="noreferrer"><Icon name="github" size={18} /> View GitHub</a></div></div></article>
       </div></section>
 
-      <section id="experience" className="section"><SectionHeading eyebrow="04 / JOURNEY" title="Learning by building." /><div className="journey-grid"><article className="timeline-card reveal"><p className="date">2026 — Present</p><h3>Software Developer Intern</h3><p>Developing practical experience through real-world project work with React, JavaScript, Firebase, Git/GitHub and modern web development workflows.</p><div className="tags"><span>React</span><span>JavaScript</span><span>Firebase</span><span>Git/GitHub</span></div></article><article className="timeline-card education reveal"><p className="date">EDUCATION</p><h3>B.Tech Computer Science and Engineering</h3><p>AKTU</p></article></div></section>
+      <section id="experience" className="section"><SectionHeading eyebrow="04 JOURNEY" title="Learning by building." /><div className="journey-grid"><article className="timeline-card reveal"><p className="date">2026 — Present</p><h3>Software Developer Intern</h3><p>Developing practical experience through real-world project work with React, JavaScript, Firebase, Git/GitHub and modern web development workflows.</p><div className="tags"><span>React</span><span>JavaScript</span><span>Firebase</span><span>Git/GitHub</span></div></article><article className="timeline-card education reveal"><p className="date">EDUCATION</p><h3>B.Tech Computer Science and Engineering</h3><p>AKTU</p></article></div></section>
 
-      <section id="contact" className="section contact"><SectionHeading eyebrow="05 / CONTACT" title="Let&apos;s start a conversation." /><div className="contact-grid"><div className="contact-intro reveal"><p>Have a project, opportunity, or idea to discuss? I&apos;d be glad to hear from you.</p><div className="contact-methods"><a href={githubUrl} target="_blank" rel="noreferrer"><Icon name="github" /> GitHub <Icon name="arrow" size={16} /></a>{linkedInUrl ? <a href={linkedInUrl} target="_blank" rel="noreferrer"><Icon name="linkedin" /> LinkedIn <Icon name="arrow" size={16} /></a> : <span><Icon name="linkedin" /> LinkedIn <small>Add URL in App.jsx</small></span>}{contactEmail ? <a href={`mailto:${contactEmail}`}><Icon name="mail" /> {contactEmail} <Icon name="arrow" size={16} /></a> : <span><Icon name="mail" /> Email <small>Add email in App.jsx</small></span>}</div></div><form className="contact-form reveal" onSubmit={handleSubmit}><p className="form-intro">This form opens your email app; no message is stored on this website.</p><label>Name<input required name="name" placeholder="Your name" autoComplete="name" /></label><label>Email<input required type="email" name="email" placeholder="you@example.com" autoComplete="email" /></label><label>Message<textarea required name="message" rows="4" placeholder="Tell me a little about your project" /></label><button className="button primary" type="submit">Open Email Draft <Icon name="arrow" size={18} /></button>{sent && <p className="form-note">Opening your email client…</p>}</form></div></section>
+      <section id="contact" className="section contact"><SectionHeading eyebrow="05 CONTACT" title="Let&apos;s start a conversation." /><div className="contact-grid"><div className="contact-intro reveal"><p>Have a project, opportunity, or idea to discuss? I&apos;d be glad to hear from you.</p><div className="contact-methods"><a href={githubUrl} target="_blank" rel="noreferrer"><Icon name="github" /> GitHub <Icon name="arrow" size={16} /></a>{linkedInUrl ? <a href={linkedInUrl} target="_blank" rel="noreferrer"><Icon name="linkedin" /> LinkedIn <Icon name="arrow" size={16} /></a> : <span><Icon name="linkedin" /> LinkedIn <small>Add URL in App.jsx</small></span>}{contactEmail ? <a href={`mailto:${contactEmail}`}><Icon name="mail" /> {contactEmail} <Icon name="arrow" size={16} /></a> : <span><Icon name="mail" /> Email <small>Add email in App.jsx</small></span>}</div></div><form className="contact-form reveal" onSubmit={handleSubmit}><p className="form-intro">This form opens your email app; no message is stored on this website.</p><label>Name<input required name="name" placeholder="Your name" autoComplete="name" /></label><label>Email<input required type="email" name="email" placeholder="you@example.com" autoComplete="email" /></label><label>Message<textarea required name="message" rows="4" placeholder="Tell me a little about your project" /></label><button className="button primary" type="submit">Open Email Draft <Icon name="arrow" size={18} /></button>{sent && <p className="form-note">Opening your email client…</p>}</form></div></section>
     </main>
     {!resumeAvailable && <p id="resume-note" className="resume-note">Add your real resume PDF at <code>public/assets/resume.pdf</code>, then set <code>resumeAvailable</code> to <code>true</code> in <code>src/App.jsx</code> to enable the download.</p>}
-    <footer><a className="logo" href="#home">AKASH<span>.</span></a><p>Software Developer</p><div><a href={githubUrl} target="_blank" rel="noreferrer">GitHub</a><a href={linkedInUrl} target="_blank" rel="noreferrer">LinkedIn</a><a href={`mailto:${contactEmail}`}>Email</a></div><small>© 2026 Akash Rajput. All rights reserved.</small></footer>
+    <footer className="reveal footer-reveal"><a className="logo" href="#home">AKASH</a><p>Software Developer</p><div><a href={githubUrl} target="_blank" rel="noreferrer">GitHub</a><a href={linkedInUrl} target="_blank" rel="noreferrer">LinkedIn</a><a href={`mailto:${contactEmail}`}>Email</a></div><small>© 2026 Akash Rajput. All rights reserved.</small></footer>
   </>;
 }
 
