@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import "./App.css";
+const HeroCanvas = lazy(() => import("./HeroCanvas.jsx"));
 
 const githubUrl = "https://github.com/Aakash-Rajput22";
 const contactEmail = "thakurakashrajput45@gmail.com";
@@ -527,7 +528,6 @@ function Contact() {
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [evening, setEvening] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -556,7 +556,7 @@ function App() {
     <>
       <div className="grain" aria-hidden="true" />
       <header className={`site-header${scrolled ? " is-scrolled" : ""}${menuOpen ? " menu-open" : ""}`}>
-        <a className="logo" href="#home" onClick={closeMenu}>Akash</a>
+        <a className="logo" href="#home" onClick={closeMenu}>Akash<span>.</span></a>
         <button
           className="menu-button"
           aria-label="Toggle navigation"
@@ -575,18 +575,24 @@ function App() {
       </header>
 
       <main>
-        <section id="home" className={`hero${evening ? " is-evening" : ""}`}>
+        <section id="home" className="hero">
           <div className="hero-media">
-            <img src={heroImage} alt="Laptop with code in a warm-lit workspace" />
+            <img src={heroImage} alt="" />
           </div>
           <div className="hero-shade" aria-hidden="true" />
-          <div className="hero-night" aria-hidden="true" />
+          <Suspense fallback={null}>
+            <HeroCanvas />
+          </Suspense>
           <div className="container-x hero-inner hero-entrance">
             <p className="eyebrow">Software Developer · Available 2026</p>
-            <h1 className="display-1">Web experiences, <em className="italic-accent">made</em> inevitable.</h1>
+            <h1 className="display-1">
+              There&rsquo;s a new <span className="script-accent italic-accent">Dev</span> in town.
+              <br />
+              Meet <span className="italic-accent">Akash</span>!
+            </h1>
             <p className="hero-lead">
-              I&rsquo;m Akash Rajput. I build modern, responsive web applications with React, JavaScript and Firebase —
-              thoughtful interfaces that solve real user needs.
+              I build modern, responsive web applications with React, JavaScript and Firebase
+              — turning ideas into clear, practical interfaces that solve real user needs.
             </p>
             <div className="hero-actions">
               <a className="btn btn-cream" href="#projects">View my work <Icon name="arrow" size={16} /></a>
@@ -596,9 +602,6 @@ function App() {
               <a className="link-underline" href="#contact">Let&rsquo;s talk</a>
             </div>
           </div>
-          <button className="hero-mode" onClick={() => setEvening(!evening)} aria-pressed={evening}>
-            <Icon name="moon" size={15} /> {evening ? "Day" : "Evening"}
-          </button>
           <div className="hero-scroll" aria-hidden="true">Scroll <i /></div>
         </section>
 
