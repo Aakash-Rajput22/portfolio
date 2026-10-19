@@ -556,7 +556,7 @@ function App() {
     <>
       <div className="grain" aria-hidden="true" />
       <header className={`site-header${scrolled ? " is-scrolled" : ""}${menuOpen ? " menu-open" : ""}`}>
-        <a className="logo" href="#home" onClick={closeMenu}>Akash<span>.</span></a>
+        <a className="logo" href="#home" onClick={closeMenu}>Akash<span></span></a>
         <button
           className="menu-button"
           aria-label="Toggle navigation"
